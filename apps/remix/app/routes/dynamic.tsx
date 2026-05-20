@@ -9,21 +9,16 @@ import { ServerFilteredTable } from '~/components/ServerFilteredTable'
 import { AddCarModal } from '~/components/AddCarModal'
 import routeSource from './dynamic.tsx?raw'
 
-// ─── Loader ──────────────────────────────────────────────────────────────────
-// defer() lets us return promises — Remix streams them via Suspense
+// ─── Loader (SSR) ────────────────────────────────────────────────────────────
 export async function loader({ request }: LoaderFunctionArgs) {
   const url = new URL(request.url)
   const searchParams = Object.fromEntries(url.searchParams)
-
-  // Fast: resolved immediately — table renders with first HTML flush
   const cars = getCars()
 
-  // Slow: returned as promise — streams in after 2s
   const statsPromise = new Promise<ReturnType<typeof getCarStats>>((resolve) =>
     setTimeout(() => resolve(getCarStats()), 2000),
   )
 
-  // Medium: returned as promise — streams in after 0.5s
   const quickStatsPromise = new Promise<{ total: number; electric: number; awd: number }>((resolve) =>
     setTimeout(() => {
       const all = getCars()
@@ -38,7 +33,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
   return defer({ cars, statsPromise, quickStatsPromise, searchParams })
 }
 
-// ─── Action ──────────────────────────────────────────────────────────────────
+// ─── Action (SSR mutation) ────────────────────────────────────────────────────
 export async function action({ request }: ActionFunctionArgs) {
   const formData = await request.formData()
 
@@ -55,54 +50,68 @@ export async function action({ request }: ActionFunctionArgs) {
   }
 
   addCar(car)
-
-  // Remix automatically re-runs the loader after an action — no manual revalidation needed!
   return redirect('/dynamic')
 }
 
-// ─── Page ────────────────────────────────────────────────────────────────────
+// ─── Page component ───────────────────────────────────────────────────────────
 export default function DynamicPage() {
   const { cars, statsPromise, quickStatsPromise, searchParams } = useLoaderData<typeof loader>()
 
   return (
-    <div className="space-y-8">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '3rem' }}>
+      {/* Page header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Dynamic Rendering</h1>
-        <p className="mt-1 text-sm text-gray-500">
-          Data fetched fresh on every request via Remix loader. Demonstrates deferred streaming,
-          actions for mutations, and both client + server-side filtering.
+        <h1
+          style={{
+            fontFamily: 'var(--font-display)',
+            fontWeight: 700,
+            fontSize: '2rem',
+            color: 'var(--text)',
+            letterSpacing: 'normal',
+            margin: 0,
+          }}
+        >
+          Dynamic Rendering
+        </h1>
+        <p
+          style={{
+            marginTop: '0.5rem',
+            fontFamily: 'var(--font-mono)',
+            fontSize: '0.78rem',
+            color: 'var(--text-muted)',
+            letterSpacing: '0.01em',
+          }}
+        >
+          Data fetched fresh on every request via Remix loader — deferred streaming, actions, client + server filtering.
         </p>
       </div>
 
-      {/* Section 1: Streaming demo — deferred promises with Suspense */}
-      <section className="space-y-3">
-        <h2 className="text-base font-semibold text-gray-700 border-b pb-1">
-          📡 Streaming / Suspense (defer + Await)
-          <span className="ml-2 text-xs font-normal text-gray-500">
-            Reload the page — watch components appear progressively
-          </span>
-        </h2>
+      {/* Section 1: Streaming */}
+      <section style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
+        <SectionHeading
+          label="STREAMING / SUSPENSE (DEFER + AWAIT)"
+          color="var(--server-text)"
+          note="reload the page — watch components appear progressively"
+        />
 
         {/* Quick stats — 0.5s */}
-        <Suspense
-          fallback={
-            <div className="relative rounded-lg border-2 border-blue-300 border-dashed p-4 animate-pulse">
-              <span className="absolute top-2 right-2 text-xs px-2 py-0.5 rounded-full font-mono bg-blue-50 text-blue-400 border border-blue-200">
-                🔵 SERVER — loading...
-              </span>
-              <div className="flex gap-6">
-                {[1, 2, 3].map((i) => <div key={i} className="h-4 w-28 bg-blue-100 rounded" />)}
-              </div>
-            </div>
-          }
-        >
+        <Suspense fallback={<ServerSkeleton rows={1} />}>
           <Await resolve={quickStatsPromise}>
             {(qs) => (
-              <ComponentWrapper type="server" label="🔵 SERVER — Quick Stats (0.5s delay)" sourceCode={routeSource} componentName="dynamic.tsx (Remix loader)">
-                <div className="flex gap-6 text-sm">
-                  <span><strong className="text-blue-700">{qs.total}</strong> cars in database</span>
-                  <span><strong className="text-green-700">{qs.electric}</strong> electric ({Math.round((qs.electric / qs.total) * 100)}%)</span>
-                  <span><strong className="text-purple-700">{qs.awd}</strong> AWD</span>
+              <ComponentWrapper
+                type="server"
+                label="🔵 SERVER — Quick Stats (0.5s delay)"
+                sourceCode={routeSource}
+                componentName="dynamic.tsx (Remix loader)"
+              >
+                <div style={{ display: 'flex', gap: '2.5rem', alignItems: 'baseline' }}>
+                  <Stat value={qs.total} label="cars in database" valueColor="var(--server-text)" />
+                  <Stat
+                    value={`${qs.electric}`}
+                    label={`electric (${Math.round((qs.electric / qs.total) * 100)}%)`}
+                    valueColor="#16a34a"
+                  />
+                  <Stat value={qs.awd} label="AWD" valueColor="#9333ea" />
                 </div>
               </ComponentWrapper>
             )}
@@ -110,29 +119,29 @@ export default function DynamicPage() {
         </Suspense>
 
         {/* Full stats — 2s */}
-        <Suspense
-          fallback={
-            <div className="relative rounded-lg border-2 border-blue-300 border-dashed p-4 animate-pulse">
-              <span className="absolute top-2 right-2 text-xs px-2 py-0.5 rounded-full font-mono bg-blue-50 text-blue-400 border border-blue-200">
-                🔵 SERVER — loading...
-              </span>
-              <div className="h-4 w-32 bg-blue-100 rounded mb-3" />
-              <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-                {[1,2,3,4,5].map((i) => (
-                  <div key={i} className="rounded-lg bg-blue-50 border border-blue-100 p-3">
-                    <div className="h-6 w-12 bg-blue-100 rounded mx-auto mb-1" />
-                    <div className="h-3 w-16 bg-blue-50 rounded mx-auto" />
-                  </div>
-                ))}
-              </div>
-            </div>
-          }
-        >
+        <Suspense fallback={<ServerSkeleton rows={5} showGrid />}>
           <Await resolve={statsPromise}>
             {(stats) => (
-              <ComponentWrapper type="server" label="🔵 SERVER — Stats (2s delay)" sourceCode={routeSource} componentName="dynamic.tsx (Remix loader)">
-                <h3 className="text-sm font-semibold text-gray-700 mb-3">Fleet Statistics</h3>
-                <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+              <ComponentWrapper
+                type="server"
+                label="🔵 SERVER — Stats (2s delay)"
+                sourceCode={routeSource}
+                componentName="dynamic.tsx (Remix loader)"
+              >
+                <p
+                  style={{
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '0.65rem',
+                    fontWeight: 600,
+                    letterSpacing: '0.12em',
+                    textTransform: 'uppercase',
+                    color: 'var(--server-muted)',
+                    marginBottom: '0.875rem',
+                  }}
+                >
+                  Fleet Statistics
+                </p>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '0.625rem' }}>
                   {[
                     { label: 'Total Cars', value: stats.total },
                     { label: 'Avg Range',  value: `${stats.avgRange} km` },
@@ -140,9 +149,38 @@ export default function DynamicPage() {
                     { label: 'Categories', value: stats.categories },
                     { label: 'Makes',      value: stats.makes },
                   ].map(({ label, value }) => (
-                    <div key={label} className="rounded-lg bg-blue-50 border border-blue-200 p-3 text-center">
-                      <div className="text-xl font-bold text-blue-700">{value}</div>
-                      <div className="text-xs text-blue-600">{label}</div>
+                    <div
+                      key={label}
+                      style={{
+                        padding: '0.75rem 0.625rem',
+                        textAlign: 'center',
+                        borderRadius: '0.375rem',
+                        background: 'rgba(59,130,246,0.05)',
+                        border: '1px solid rgba(59,130,246,0.15)',
+                      }}
+                    >
+                      <div
+                        style={{
+                          fontFamily: 'var(--font-mono)',
+                          fontSize: '1.5rem',
+                          fontWeight: 600,
+                          color: 'var(--server-text)',
+                          lineHeight: 1.1,
+                        }}
+                      >
+                        {value}
+                      </div>
+                      <div
+                        style={{
+                          fontFamily: 'var(--font-mono)',
+                          fontSize: '0.62rem',
+                          color: 'var(--server-muted)',
+                          marginTop: '0.3rem',
+                          letterSpacing: '0.04em',
+                        }}
+                      >
+                        {label}
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -152,30 +190,174 @@ export default function DynamicPage() {
         </Suspense>
       </section>
 
-      {/* Section 2: Client-side filtering table */}
-      <section className="space-y-3">
-        <h2 className="text-base font-semibold text-gray-700 border-b pb-1">
-          🟠 Client-side Filtering + Action Mutations
-        </h2>
-        <ComponentWrapper type="server" label="🔵 SERVER — Data via Loader" sourceCode={routeSource} componentName="dynamic.tsx (Remix loader)">
-          <p className="text-xs text-blue-600 font-mono mb-3">
-            ↳ Cars loaded in Remix loader, passed as props. Remix re-runs this loader
-            automatically after any action — no manual revalidation needed!
+      {/* Section 2: Client-side filtering */}
+      <section style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
+        <SectionHeading label="CLIENT-SIDE FILTERING + SERVER ACTIONS" color="var(--client-text)" />
+        <ComponentWrapper
+          type="server"
+          label="🔵 SERVER — Data Fetching Wrapper"
+          sourceCode={routeSource}
+          componentName="dynamic.tsx (Remix loader)"
+        >
+          <p
+            style={{
+              fontFamily: 'var(--font-mono)',
+              fontSize: '0.7rem',
+              color: 'var(--server-muted)',
+              marginBottom: '0.75rem',
+            }}
+          >
+            ↳ Data fetched on the server. {(cars as Car[]).length} cars passed as props to the client table below. No API call from the browser — data arrives with the HTML.
           </p>
           <CarTableClient cars={cars as Car[]} />
         </ComponentWrapper>
       </section>
 
       {/* Section 3: Server-side filtering */}
-      <section className="space-y-3">
-        <h2 className="text-base font-semibold text-gray-700 border-b pb-1">
-          🔵 Server-side Filtering via URL Params
-          <span className="ml-2 text-xs font-normal text-gray-500">
-            Watch the URL bar update as you type
-          </span>
-        </h2>
+      <section style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
+        <SectionHeading
+          label="SERVER-SIDE FILTERING VIA URL PARAMS"
+          color="var(--server-text)"
+          note="watch the URL update as you type"
+        />
         <ServerFilteredTable cars={cars as Car[]} searchParams={searchParams} />
       </section>
+    </div>
+  )
+}
+
+// ─── Shared sub-components ────────────────────────────────────────────────────
+
+function SectionHeading({
+  label,
+  color,
+  note,
+}: {
+  label: string
+  color: string
+  note?: string
+}) {
+  return (
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'baseline',
+        gap: '0.75rem',
+        paddingBottom: '0.625rem',
+        borderBottom: '1px solid var(--border)',
+      }}
+    >
+      <h2
+        style={{
+          fontFamily: 'var(--font-mono)',
+          fontWeight: 600,
+          fontSize: '0.68rem',
+          color,
+          letterSpacing: '0.1em',
+          textTransform: 'uppercase',
+          margin: 0,
+        }}
+      >
+        {label}
+      </h2>
+      {note && (
+        <span
+          style={{
+            fontFamily: 'var(--font-mono)',
+            fontSize: '0.68rem',
+            color: 'var(--text-muted)',
+          }}
+        >
+          — {note}
+        </span>
+      )}
+    </div>
+  )
+}
+
+function Stat({
+  value,
+  label,
+  valueColor,
+}: {
+  value: string | number
+  label: string
+  valueColor: string
+}) {
+  return (
+    <span style={{ display: 'flex', alignItems: 'baseline', gap: '0.4rem' }}>
+      <strong
+        style={{
+          fontFamily: 'var(--font-mono)',
+          fontSize: '1.2rem',
+          fontWeight: 600,
+          color: valueColor,
+          lineHeight: 1,
+        }}
+      >
+        {value}
+      </strong>
+      <span
+        style={{
+          fontFamily: 'var(--font-mono)',
+          fontSize: '0.75rem',
+          color: 'var(--text-muted)',
+        }}
+      >
+        {label}
+      </span>
+    </span>
+  )
+}
+
+function ServerSkeleton({ rows, showGrid }: { rows: number; showGrid?: boolean }) {
+  return (
+    <div
+      className="animate-pulse"
+      style={{
+        position: 'relative',
+        borderRadius: '0.5rem',
+        border: '1px solid var(--server-border)',
+        background: 'var(--server-bg)',
+        padding: '1.25rem',
+        paddingTop: '2.75rem',
+      }}
+    >
+      <span
+        style={{
+          position: 'absolute',
+          top: '0.5rem',
+          right: '0.5rem',
+          fontFamily: 'var(--font-mono)',
+          fontSize: '0.65rem',
+          padding: '3px 10px',
+          borderRadius: '9999px',
+          background: 'rgba(59,130,246,0.07)',
+          border: '1px solid var(--server-border)',
+          color: 'var(--server-muted)',
+        }}
+      >
+        🔵 SERVER — loading...
+      </span>
+      {showGrid ? (
+        <>
+          <div style={{ height: '0.65rem', width: '7rem', borderRadius: '0.25rem', background: 'rgba(59,130,246,0.15)', marginBottom: '0.875rem' }} />
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '0.625rem' }}>
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} style={{ borderRadius: '0.375rem', padding: '0.75rem', background: 'rgba(59,130,246,0.05)', border: '1px solid rgba(59,130,246,0.1)' }}>
+                <div style={{ height: '1.75rem', width: '2.5rem', borderRadius: '0.25rem', background: 'rgba(59,130,246,0.15)', margin: '0 auto 0.4rem' }} />
+                <div style={{ height: '0.5rem', width: '3.5rem', borderRadius: '0.25rem', background: 'rgba(59,130,246,0.1)', margin: '0 auto' }} />
+              </div>
+            ))}
+          </div>
+        </>
+      ) : (
+        <div style={{ display: 'flex', gap: '2.5rem' }}>
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} style={{ height: '1.2rem', width: '7rem', borderRadius: '0.25rem', background: 'rgba(59,130,246,0.15)' }} />
+          ))}
+        </div>
+      )}
     </div>
   )
 }

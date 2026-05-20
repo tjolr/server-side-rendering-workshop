@@ -27,6 +27,6 @@ export default defineConfig({
     include: ['@ssr-workshop/shared', 'react-syntax-highlighter'],
   },
   ssr: {
-    noExternal: ['react-syntax-highlighter'],
+    noExternal: ['@ssr-workshop/shared', 'react-syntax-highlighter'],
   },
 })

@@ -9,8 +9,6 @@ interface ServerFilteredTableProps {
   searchParams: Record<string, string>
 }
 
-// In Remix, "server-side filtering" = the loader already filtered the data.
-// The filter inputs here update the URL, which triggers a loader re-run.
 export function ServerFilteredTable({ cars, searchParams }: ServerFilteredTableProps) {
   const navigate = useNavigate()
   const location = useLocation()
@@ -31,6 +29,8 @@ export function ServerFilteredTable({ cars, searchParams }: ServerFilteredTableP
     [navigate, location],
   )
 
+  const headers = ['Make', 'Model', 'Year', 'Category', 'Fuel', 'Drive', 'HP', 'Range (km)', 'Baggage (L)']
+
   return (
     <ComponentWrapper
       type="server"
@@ -38,14 +38,25 @@ export function ServerFilteredTable({ cars, searchParams }: ServerFilteredTableP
       sourceCode={sourceCode}
       componentName="ServerFilteredTable.tsx (Remix)"
     >
-      <div className="space-y-3">
-        <p className="text-xs text-blue-600 font-mono">
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+        <p style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'var(--server-muted)' }}>
           ↳ Each filter change updates the URL → Remix re-runs the loader → server filters the data.
-          Check the URL bar as you type!
         </p>
 
-        <div className="flex flex-wrap gap-2 items-center">
-          <span className="text-xs font-mono text-blue-700 font-semibold">Filters (server-side):</span>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', alignItems: 'center' }}>
+          <span
+            style={{
+              fontFamily: 'var(--font-mono)',
+              fontSize: '0.65rem',
+              fontWeight: 600,
+              color: 'var(--server-muted)',
+              textTransform: 'uppercase',
+              letterSpacing: '0.08em',
+              marginRight: '0.25rem',
+            }}
+          >
+            Filters:
+          </span>
           {[
             { key: 'make', placeholder: 'Make...' },
             { key: 'model', placeholder: 'Model...' },
@@ -55,23 +66,52 @@ export function ServerFilteredTable({ cars, searchParams }: ServerFilteredTableP
           ].map(({ key, placeholder }) => (
             <input
               key={key}
-              className="h-7 rounded border border-blue-300 px-2 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+              style={{
+                height: '1.8rem',
+                borderRadius: '0.3rem',
+                border: '1px solid var(--server-border)',
+                background: 'var(--bg)',
+                color: 'var(--server-text)',
+                fontFamily: 'var(--font-mono)',
+                fontSize: '0.72rem',
+                padding: '0 0.6rem',
+                outline: 'none',
+                width: '7rem',
+              }}
               placeholder={placeholder}
               defaultValue={searchParams[key] ?? ''}
               onChange={(e) => updateParam(key, e.target.value)}
             />
           ))}
           {isPending && (
-            <span className="text-xs text-blue-500 font-mono animate-pulse">↻ fetching...</span>
+            <span
+              className="animate-pulse"
+              style={{ fontFamily: 'var(--font-mono)', fontSize: '0.68rem', color: 'var(--server-text)' }}
+            >
+              ↻ fetching...
+            </span>
           )}
         </div>
 
-        <div className="overflow-x-auto rounded-lg border border-gray-200">
-          <table className="w-full text-sm">
-            <thead className="bg-blue-50">
-              <tr>
-                {['Make', 'Model', 'Year', 'Category', 'Fuel', 'Drive', 'HP', 'Range (km)', 'Baggage (L)'].map((h) => (
-                  <th key={h} className="px-3 py-2 text-left font-semibold text-blue-800 whitespace-nowrap">
+        <div style={{ overflowX: 'auto', borderRadius: '0.375rem', border: '1px solid var(--border)' }}>
+          <table style={{ width: '100%', fontSize: '0.8rem', borderCollapse: 'collapse' }}>
+            <thead>
+              <tr style={{ borderBottom: '1px solid var(--border)', background: 'var(--surface)' }}>
+                {headers.map((h) => (
+                  <th
+                    key={h}
+                    style={{
+                      padding: '0.5rem 0.75rem',
+                      textAlign: 'left',
+                      fontFamily: 'var(--font-mono)',
+                      fontSize: '0.62rem',
+                      fontWeight: 600,
+                      color: 'var(--server-muted)',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.06em',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
                     {h}
                   </th>
                 ))}
@@ -80,22 +120,42 @@ export function ServerFilteredTable({ cars, searchParams }: ServerFilteredTableP
             <tbody>
               {cars.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="py-8 text-center text-gray-500">
+                  <td
+                    colSpan={9}
+                    style={{
+                      padding: '2.5rem',
+                      textAlign: 'center',
+                      fontFamily: 'var(--font-mono)',
+                      fontSize: '0.78rem',
+                      color: 'var(--text-muted)',
+                    }}
+                  >
                     No cars match your server-side filters
                   </td>
                 </tr>
               ) : (
                 cars.map((car, i) => (
-                  <tr key={car.id} className={i % 2 === 0 ? 'bg-white' : 'bg-blue-50/40'}>
-                    <td className="px-3 py-2 whitespace-nowrap">{car.make}</td>
-                    <td className="px-3 py-2 whitespace-nowrap">{car.model}</td>
-                    <td className="px-3 py-2">{car.year}</td>
-                    <td className="px-3 py-2">{car.category}</td>
-                    <td className="px-3 py-2">{car.fuelType}</td>
-                    <td className="px-3 py-2">{car.wheelDrive}</td>
-                    <td className="px-3 py-2">{car.horsepower}</td>
-                    <td className="px-3 py-2">{car.range}</td>
-                    <td className="px-3 py-2">{car.baggageCapacity}</td>
+                  <tr
+                    key={car.id}
+                    style={{
+                      background: i % 2 === 0 ? 'var(--bg)' : 'var(--surface)',
+                      borderBottom: '1px solid var(--border)',
+                    }}
+                  >
+                    {[car.make, car.model, car.year, car.category, car.fuelType, car.wheelDrive, car.horsepower, car.range, car.baggageCapacity].map((val, j) => (
+                      <td
+                        key={j}
+                        style={{
+                          padding: '0.45rem 0.75rem',
+                          whiteSpace: 'nowrap',
+                          fontFamily: 'var(--font-mono)',
+                          fontSize: '0.78rem',
+                          color: 'var(--text)',
+                        }}
+                      >
+                        {val}
+                      </td>
+                    ))}
                   </tr>
                 ))
               )}
@@ -103,7 +163,7 @@ export function ServerFilteredTable({ cars, searchParams }: ServerFilteredTableP
           </table>
         </div>
 
-        <p className="text-xs text-gray-500">
+        <p style={{ fontFamily: 'var(--font-mono)', fontSize: '0.68rem', color: 'var(--text-muted)' }}>
           {cars.length} cars (filtered server-side in loader)
         </p>
       </div>

@@ -8,9 +8,9 @@ interface ServerFilteredTableProps {
   searchParams: { make?: string; model?: string; category?: string; fuelType?: string; wheelDrive?: string }
 }
 
-// Server Component — filtering happens on the server by reading URL search params
+// SERVER COMPONENT — filtering runs on the server by reading URL search params; the `cars` prop is pre-filtered before any HTML is sent.
+// vs CarTableClient: SSR filter scales to any dataset size; CSR filter requires all rows to be loaded in the browser first.
 export async function ServerFilteredTable({ searchParams }: ServerFilteredTableProps) {
-  // Simulate slight server processing time
   await new Promise((r) => setTimeout(r, 300))
 
   const allCars = getCars()
@@ -25,6 +25,8 @@ export async function ServerFilteredTable({ searchParams }: ServerFilteredTableP
 
   const sourceCode = readFileSync(path.join(process.cwd(), 'app/dynamic/ServerFilteredTable.tsx'), 'utf-8')
 
+  const headers = ['Make', 'Model', 'Year', 'Category', 'Fuel', 'Drive', 'HP', 'Range (km)', 'Baggage (L)']
+
   return (
     <ComponentWrapper
       type="server"
@@ -32,21 +34,44 @@ export async function ServerFilteredTable({ searchParams }: ServerFilteredTableP
       sourceCode={sourceCode}
       componentName="ServerFilteredTable.tsx"
     >
-      <div className="space-y-3">
-        <p className="text-xs text-blue-600 font-mono">
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+        <p
+          style={{
+            fontFamily: 'var(--font-mono)',
+            fontSize: '0.7rem',
+            color: 'var(--server-muted)',
+          }}
+        >
           ↳ Each filter change updates the URL → triggers server re-render → server filters the data.
-          Check the URL bar as you type!
         </p>
 
-        {/* Client component for the filter inputs — updates URL search params */}
         <ServerFilterControls searchParams={searchParams} />
 
-        <div className="overflow-x-auto rounded-lg border border-gray-200">
-          <table className="w-full text-sm">
-            <thead className="bg-blue-50">
-              <tr>
-                {['Make', 'Model', 'Year', 'Category', 'Fuel', 'Drive', 'HP', 'Range (km)', 'Baggage (L)'].map((h) => (
-                  <th key={h} className="px-3 py-2 text-left font-semibold text-blue-800 whitespace-nowrap">
+        <div
+          style={{
+            overflowX: 'auto',
+            borderRadius: '0.375rem',
+            border: '1px solid var(--border)',
+          }}
+        >
+          <table style={{ width: '100%', fontSize: '0.8rem', borderCollapse: 'collapse' }}>
+            <thead>
+              <tr style={{ borderBottom: '1px solid var(--border)', background: 'var(--surface)' }}>
+                {headers.map((h) => (
+                  <th
+                    key={h}
+                    style={{
+                      padding: '0.5rem 0.75rem',
+                      textAlign: 'left',
+                      fontFamily: 'var(--font-mono)',
+                      fontSize: '0.62rem',
+                      fontWeight: 600,
+                      color: 'var(--server-muted)',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.06em',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
                     {h}
                   </th>
                 ))}
@@ -55,22 +80,52 @@ export async function ServerFilteredTable({ searchParams }: ServerFilteredTableP
             <tbody>
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="py-8 text-center text-gray-500">
+                  <td
+                    colSpan={9}
+                    style={{
+                      padding: '2.5rem',
+                      textAlign: 'center',
+                      fontFamily: 'var(--font-mono)',
+                      fontSize: '0.78rem',
+                      color: 'var(--text-muted)',
+                    }}
+                  >
                     No cars match your server-side filters
                   </td>
                 </tr>
               ) : (
                 filtered.map((car, i) => (
-                  <tr key={car.id} className={i % 2 === 0 ? 'bg-white' : 'bg-blue-50/40'}>
-                    <td className="px-3 py-2 whitespace-nowrap">{car.make}</td>
-                    <td className="px-3 py-2 whitespace-nowrap">{car.model}</td>
-                    <td className="px-3 py-2">{car.year}</td>
-                    <td className="px-3 py-2">{car.category}</td>
-                    <td className="px-3 py-2">{car.fuelType}</td>
-                    <td className="px-3 py-2">{car.wheelDrive}</td>
-                    <td className="px-3 py-2">{car.horsepower}</td>
-                    <td className="px-3 py-2">{car.range}</td>
-                    <td className="px-3 py-2">{car.baggageCapacity}</td>
+                  <tr
+                    key={car.id}
+                    style={{
+                      background: i % 2 === 0 ? 'var(--bg)' : 'var(--surface)',
+                      borderBottom: '1px solid var(--border)',
+                    }}
+                  >
+                    {[
+                      car.make,
+                      car.model,
+                      car.year,
+                      car.category,
+                      car.fuelType,
+                      car.wheelDrive,
+                      car.horsepower,
+                      car.range,
+                      car.baggageCapacity,
+                    ].map((val, j) => (
+                      <td
+                        key={j}
+                        style={{
+                          padding: '0.45rem 0.75rem',
+                          whiteSpace: 'nowrap',
+                          fontFamily: 'var(--font-mono)',
+                          fontSize: '0.78rem',
+                          color: 'var(--text)',
+                        }}
+                      >
+                        {val}
+                      </td>
+                    ))}
                   </tr>
                 ))
               )}
@@ -78,7 +133,13 @@ export async function ServerFilteredTable({ searchParams }: ServerFilteredTableP
           </table>
         </div>
 
-        <p className="text-xs text-gray-500">
+        <p
+          style={{
+            fontFamily: 'var(--font-mono)',
+            fontSize: '0.68rem',
+            color: 'var(--text-muted)',
+          }}
+        >
           {filtered.length} of {allCars.length} cars (filtered server-side)
         </p>
       </div>

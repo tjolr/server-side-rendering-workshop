@@ -3,8 +3,8 @@ import { useLoaderData, Link } from '@remix-run/react'
 import { getCars, ComponentWrapper } from '@ssr-workshop/shared'
 import type { Car } from '@ssr-workshop/shared'
 
-// Static-like: long cache headers tell CDN/browser to cache for 1 hour
-// In Remix, "static" means aggressive HTTP caching rather than build-time rendering
+// SSR with long cache headers — Remix runs the loader on the server, then CDN/browser caches the response for 1 hour.
+// "Static" in Remix = HTTP caching, not build-time rendering; the server still runs the loader on cache miss.
 export async function loader() {
   const cars = getCars()
   return json(

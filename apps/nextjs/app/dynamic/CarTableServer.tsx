@@ -4,7 +4,8 @@ import { CarTableClient } from './CarTableClient'
 import { readFileSync } from 'fs'
 import path from 'path'
 
-// Server Component — fetches data on server, passes to client table
+// SERVER COMPONENT — runs on the server, fetches data directly (no API call needed), then passes rows as props to the client table.
+// No JS from this component ships to the browser; only the serialised `cars` prop crosses the server/client boundary.
 export async function CarTableServer() {
   const cars = getCars()
   const dir = path.join(process.cwd(), 'app/dynamic')

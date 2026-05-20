@@ -2,12 +2,11 @@ import Link from 'next/link'
 import { getCars } from '@ssr-workshop/shared'
 import { ComponentWrapper } from '@ssr-workshop/shared'
 
-// Force static rendering — this page is rendered once at build time
+// 'force-static' tells Next.js to render this page once at build time and serve the resulting HTML to every visitor — no server execution per request.
 export const dynamic = 'force-static'
 
-// Snapshot at module load time — simulates build-time data capture.
-// In production this is locked at `next build`. In dev we fake it here
-// so the contrast with /dynamic is visible without needing a full build.
+// Data captured at module load time (build time in production) — new cars added at runtime will NOT appear here until the next build.
+// In dev mode this is snapshotted at server startup to simulate the same effect without running `next build`.
 const staticCars = getCars()
 
 export default function StaticPage() {

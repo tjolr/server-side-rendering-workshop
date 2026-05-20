@@ -14,27 +14,48 @@ interface DynamicPageProps {
   }>
 }
 
+// SERVER COMPONENT (async) — runs on the server on every request, never ships JS to the browser.
+// searchParams is a Promise in Next.js 15 — must be awaited before reading filter values.
+// Child Server Components (CarCountWidget, StatsWidget, ServerFilteredTable) stream in progressively via Suspense.
 export default async function DynamicPage({ searchParams }: DynamicPageProps) {
   const params = await searchParams
 
   return (
-    <div className="space-y-8">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '3rem' }}>
+      {/* Page header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Dynamic Rendering</h1>
-        <p className="mt-1 text-sm text-gray-500">
-          All data fetched fresh on every request. Demonstrates streaming, server actions, and both
-          client + server-side filtering.
+        <h1
+          style={{
+            fontFamily: 'var(--font-display)',
+            fontWeight: 800,
+            fontSize: '2rem',
+            color: 'var(--text)',
+            letterSpacing: '-0.03em',
+            margin: 0,
+          }}
+        >
+          Dynamic Rendering
+        </h1>
+        <p
+          style={{
+            marginTop: '0.5rem',
+            fontFamily: 'var(--font-mono)',
+            fontSize: '0.78rem',
+            color: 'var(--text-muted)',
+            letterSpacing: '0.01em',
+          }}
+        >
+          Data fetched fresh on every request — streaming, server actions, client + server filtering.
         </p>
       </div>
 
-      {/* Section 1: Streaming demo — two server components with different delays */}
-      <section className="space-y-3">
-        <h2 className="text-base font-semibold text-gray-700 border-b pb-1">
-          📡 Streaming / Suspense
-          <span className="ml-2 text-xs font-normal text-gray-500">
-            Reload the page — watch components appear progressively
-          </span>
-        </h2>
+      {/* Streaming: each async Server Component is wrapped in <Suspense> — Next.js streams their HTML to the browser as they resolve, without blocking the initial response. */}
+      <section style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
+        <SectionHeading
+          label="STREAMING / SUSPENSE"
+          color="var(--server-text)"
+          note="reload the page — watch components appear progressively"
+        />
         <Suspense fallback={<CarCountWidgetSkeleton />}>
           <CarCountWidget />
         </Suspense>
@@ -43,28 +64,89 @@ export default async function DynamicPage({ searchParams }: DynamicPageProps) {
         </Suspense>
       </section>
 
-      {/* Section 2: Server data fetch → client table with client-side filtering */}
-      <section className="space-y-3">
-        <h2 className="text-base font-semibold text-gray-700 border-b pb-1">
-          🟠 Client-side Filtering + Server Actions
-        </h2>
-        <Suspense fallback={<div className="h-32 animate-pulse rounded-lg bg-gray-100" />}>
+      {/* Hybrid: CarTableServer (SSR) fetches data and passes it to CarTableClient (CSR) for in-browser filtering. */}
+      <section style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
+        <SectionHeading
+          label="CLIENT-SIDE FILTERING + SERVER ACTIONS"
+          color="var(--client-text)"
+        />
+        <Suspense
+          fallback={
+            <div
+              className="animate-pulse rounded-lg"
+              style={{ height: '8rem', background: 'var(--surface)' }}
+            />
+          }
+        >
           <CarTableServer />
         </Suspense>
       </section>
 
-      {/* Section 3: Server-side filtering via URL search params */}
-      <section className="space-y-3">
-        <h2 className="text-base font-semibold text-gray-700 border-b pb-1">
-          🔵 Server-side Filtering via URL Params
-          <span className="ml-2 text-xs font-normal text-gray-500">
-            Watch the URL bar update as you type
-          </span>
-        </h2>
-        <Suspense fallback={<div className="h-32 animate-pulse rounded-lg bg-blue-50" />}>
+      {/* SSR filtering: URL params flow from browser → server re-render → filtered rows returned — no client-side filter logic needed. */}
+      <section style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
+        <SectionHeading
+          label="SERVER-SIDE FILTERING VIA URL PARAMS"
+          color="var(--server-text)"
+          note="watch the URL update as you type"
+        />
+        <Suspense
+          fallback={
+            <div
+              className="animate-pulse rounded-lg"
+              style={{ height: '8rem', background: 'var(--surface)' }}
+            />
+          }
+        >
           <ServerFilteredTable searchParams={params} />
         </Suspense>
       </section>
+    </div>
+  )
+}
+
+function SectionHeading({
+  label,
+  color,
+  note,
+}: {
+  label: string
+  color: string
+  note?: string
+}) {
+  return (
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'baseline',
+        gap: '0.75rem',
+        paddingBottom: '0.625rem',
+        borderBottom: '1px solid var(--border)',
+      }}
+    >
+      <h2
+        style={{
+          fontFamily: 'var(--font-mono)',
+          fontWeight: 600,
+          fontSize: '0.68rem',
+          color,
+          letterSpacing: '0.1em',
+          textTransform: 'uppercase',
+          margin: 0,
+        }}
+      >
+        {label}
+      </h2>
+      {note && (
+        <span
+          style={{
+            fontFamily: 'var(--font-mono)',
+            fontSize: '0.68rem',
+            color: 'var(--text-muted)',
+          }}
+        >
+          — {note}
+        </span>
+      )}
     </div>
   )
 }

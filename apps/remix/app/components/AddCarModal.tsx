@@ -8,7 +8,10 @@ interface AddCarModalProps {
   sourceCode?: string
 }
 
+// CLIENT component — browser UI only, but form submission POSTs to the server action in dynamic.tsx.
+// useFetcher() submits without navigating: action mutates on the server, Remix auto-reruns the loader, UI reflects updated data.
 export function AddCarModal({ onClose, sourceCode: sourceProp }: AddCarModalProps) {
+  // fetcher.state: 'idle' → 'submitting' (POST in-flight) → 'loading' (action done, loader re-running) → 'idle'
   const fetcher = useFetcher()
   const isPending = fetcher.state !== 'idle'
   const [showCode, setShowCode] = useState(false)
@@ -16,6 +19,7 @@ export function AddCarModal({ onClose, sourceCode: sourceProp }: AddCarModalProp
   // Use prop if passed (from parent), otherwise use ?raw self-import
   const codeToShow = sourceProp ?? sourceCode
 
+  // Close only when fetcher is idle with data — confirms the action completed and the loader has re-run.
   useEffect(() => {
     if (fetcher.state === 'idle' && fetcher.data) {
       onClose()
@@ -37,6 +41,7 @@ export function AddCarModal({ onClose, sourceCode: sourceProp }: AddCarModalProp
           </button>
         </div>
 
+        {/* fetcher.Form intercepts submit and POSTs via fetch() instead of causing a full page reload. */}
         <fetcher.Form method="post" action="/dynamic" className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
             <Input id="make" name="make" label="Make" placeholder="Tesla" required />

@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useEffect } from 'react'
+import ReactDOM from 'react-dom'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism'
 
@@ -19,7 +20,7 @@ export function CodeModal({ title, code, onClose }: CodeModalProps) {
     return () => document.removeEventListener('keydown', handler)
   }, [onClose])
 
-  return (
+  const modal = (
     <div
       style={{
         position: 'fixed',
@@ -80,4 +81,6 @@ export function CodeModal({ title, code, onClose }: CodeModalProps) {
       </div>
     </div>
   )
+
+  return ReactDOM.createPortal(modal, document.body)
 }

@@ -16,27 +16,46 @@ export function ComponentBadge({ type, label, sourceCode, componentName }: Compo
   const defaultLabel = isServer ? '🔵 SERVER' : '🟠 CLIENT'
   const content = label ?? defaultLabel
 
-  const className = [
-    'absolute top-2 right-2 z-10 text-xs px-2 py-0.5 rounded-full font-mono font-semibold select-none',
-    isServer
-      ? 'bg-blue-100 text-blue-700 border border-blue-300'
-      : 'bg-orange-100 text-orange-700 border border-orange-300',
-    sourceCode ? 'cursor-pointer hover:brightness-95 transition-[filter]' : '',
-  ].join(' ')
+  const style: React.CSSProperties = {
+    position: 'absolute',
+    top: '0.5rem',
+    right: '0.5rem',
+    zIndex: 10,
+    fontSize: '0.65rem',
+    padding: '3px 10px',
+    borderRadius: '9999px',
+    fontFamily: "'IBM Plex Mono', 'Menlo', monospace",
+    fontWeight: 500,
+    letterSpacing: '0.03em',
+    userSelect: 'none',
+    whiteSpace: 'nowrap',
+    cursor: sourceCode ? 'pointer' : 'default',
+    ...(isServer
+      ? {
+          background: 'rgba(91, 163, 245, 0.1)',
+          color: 'var(--server-text, #5ba3f5)',
+          border: '1px solid var(--server-border, #1a4f9e)',
+        }
+      : {
+          background: 'rgba(249, 115, 22, 0.1)',
+          color: 'var(--client-text, #f97316)',
+          border: '1px solid var(--client-border, #8a3a00)',
+        }),
+  }
 
   return (
     <>
       {sourceCode ? (
         <button
           type="button"
-          className={className}
+          style={style}
           onClick={() => setOpen(true)}
           title="View source code"
         >
           {content}
         </button>
       ) : (
-        <span className={className}>{content}</span>
+        <span style={style}>{content}</span>
       )}
       {open && sourceCode && (
         <CodeModal
@@ -67,14 +86,26 @@ export function ComponentWrapper({
   children,
 }: ComponentWrapperProps) {
   const isServer = type === 'server'
+  const wrapperStyle: React.CSSProperties = {
+    position: 'relative',
+    borderRadius: '0.5rem',
+    borderWidth: '1px',
+    borderStyle: 'solid',
+    padding: '1.25rem',
+    paddingTop: '2.75rem',
+    ...(isServer
+      ? {
+          borderColor: 'var(--server-border, #1d4ed8)',
+          background: 'var(--server-bg, rgba(4,14,31,0.6))',
+        }
+      : {
+          borderColor: 'var(--client-border, #ea580c)',
+          background: 'var(--client-bg, rgba(21,8,0,0.6))',
+        }),
+  }
+
   return (
-    <div
-      className={[
-        'relative rounded-lg border-2 p-6 pt-32',
-        isServer ? 'border-blue-500' : 'border-orange-500',
-        className,
-      ].join(' ')}
-    >
+    <div style={wrapperStyle} className={className}>
       <ComponentBadge
         type={type}
         label={label}

@@ -3,9 +3,10 @@ import { ComponentWrapper } from '@ssr-workshop/shared'
 import { readFileSync } from 'fs'
 import path from 'path'
 
-// Server Component with 0.5s delay — loads before StatsWidget, shows progressive streaming
+// SERVER COMPONENT (async) — Next.js streams this to the browser as soon as the await resolves, without blocking other Suspense boundaries.
+// The 0.5s delay simulates a slow data source; in production this would be a real DB/API call.
 export async function CarCountWidget() {
-  // Short delay — loads first, reveals progressively before StatsWidget
+  // Simulated slow fetch — in a real app, replace with an async DB/API call.
   await new Promise((r) => setTimeout(r, 500))
 
   const cars = getCars()
@@ -20,31 +21,102 @@ export async function CarCountWidget() {
       sourceCode={sourceCode}
       componentName="CarCountWidget.tsx"
     >
-      <div className="flex gap-6 text-sm">
-        <span>
-          <strong className="text-blue-700">{cars.length}</strong> cars in database
-        </span>
-        <span>
-          <strong className="text-green-700">{electricCount}</strong> electric (
-          {Math.round((electricCount / cars.length) * 100)}%)
-        </span>
-        <span>
-          <strong className="text-purple-700">{awdCount}</strong> AWD
-        </span>
+      <div style={{ display: 'flex', gap: '2.5rem', alignItems: 'baseline' }}>
+        <Stat
+          value={cars.length}
+          label="cars in database"
+          valueColor="var(--server-text)"
+        />
+        <Stat
+          value={`${electricCount}`}
+          label={`electric (${Math.round((electricCount / cars.length) * 100)}%)`}
+          valueColor="#4ade80"
+        />
+        <Stat
+          value={awdCount}
+          label="AWD"
+          valueColor="#c084fc"
+        />
       </div>
     </ComponentWrapper>
   )
 }
 
+function Stat({
+  value,
+  label,
+  valueColor,
+}: {
+  value: string | number
+  label: string
+  valueColor: string
+}) {
+  return (
+    <span style={{ display: 'flex', alignItems: 'baseline', gap: '0.4rem' }}>
+      <strong
+        style={{
+          fontFamily: 'var(--font-mono)',
+          fontSize: '1.2rem',
+          fontWeight: 600,
+          color: valueColor,
+          lineHeight: 1,
+        }}
+      >
+        {value}
+      </strong>
+      <span
+        style={{
+          fontFamily: 'var(--font-mono)',
+          fontSize: '0.75rem',
+          color: 'var(--text-muted)',
+        }}
+      >
+        {label}
+      </span>
+    </span>
+  )
+}
+
 export function CarCountWidgetSkeleton() {
   return (
-    <div className="relative rounded-lg border-2 border-blue-300 border-dashed p-4 animate-pulse">
-      <span className="absolute top-2 right-2 text-xs px-2 py-0.5 rounded-full font-mono bg-blue-50 text-blue-400 border border-blue-200">
+    <div
+      className="animate-pulse"
+      style={{
+        position: 'relative',
+        borderRadius: '0.5rem',
+        border: '1px solid var(--server-border, #1a4f9e)',
+        background: 'var(--server-bg, rgba(4,14,31,0.6))',
+        padding: '1.25rem',
+        paddingTop: '2.75rem',
+      }}
+    >
+      <span
+        style={{
+          position: 'absolute',
+          top: '0.5rem',
+          right: '0.5rem',
+          fontFamily: "'IBM Plex Mono', monospace",
+          fontSize: '0.65rem',
+          padding: '3px 10px',
+          borderRadius: '9999px',
+          background: 'rgba(91,163,245,0.07)',
+          border: '1px solid var(--server-border, #1a4f9e)',
+          color: 'var(--server-muted, #2a5080)',
+        }}
+      >
         🔵 SERVER — loading...
       </span>
-      <div className="flex gap-6">
+      <div style={{ display: 'flex', gap: '2.5rem' }}>
         {Array.from({ length: 3 }).map((_, i) => (
-          <div key={i} className="h-4 w-28 bg-blue-100 rounded" />
+          <div
+            key={i}
+            style={{
+              height: '1.2rem',
+              width: '7rem',
+              borderRadius: '0.25rem',
+              background: 'rgba(91,163,245,0.1)',
+            }}
+          />
         ))}
       </div>
     </div>
