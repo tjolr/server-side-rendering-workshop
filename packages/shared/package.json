@@ -1,0 +1,25 @@
+{
+  "name": "@ssr-workshop/shared",
+  "version": "0.0.1",
+  "private": true,
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./types": "./src/types.ts",
+    "./data": "./src/data.ts",
+    "./columns": "./src/columns.ts",
+    "./ui/*": "./src/ui/*"
+  },
+  "dependencies": {
+    "@tanstack/react-table": "^8.21.3",
+    "react": "^19.2.6"
+  },
+  "devDependencies": {
+    "@types/react": "^19.1.5",
+    "typescript": "^5.8.3"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0"
+  }
+}
