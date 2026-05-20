@@ -8,6 +8,8 @@ import {
 import { carColumns, ComponentWrapper, Input } from '@ssr-workshop/shared'
 import type { Car } from '@ssr-workshop/shared'
 import { AddCarModal } from './AddCarModal'
+import sourceCode from './CarTableClient.tsx?raw'
+import addCarModalSource from './AddCarModal.tsx?raw'
 
 interface CarTableClientProps {
   cars: Car[]
@@ -29,7 +31,12 @@ export function CarTableClient({ cars }: CarTableClientProps) {
   })
 
   return (
-    <ComponentWrapper type="client" label="🟠 CLIENT — TanStack Table + Client-side Filtering">
+    <ComponentWrapper
+      type="client"
+      label="🟠 CLIENT — TanStack Table + Client-side Filtering"
+      sourceCode={sourceCode}
+      componentName="CarTableClient.tsx"
+    >
       <div className="space-y-3">
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <div className="flex-1 min-w-48">
@@ -99,7 +106,7 @@ export function CarTableClient({ cars }: CarTableClientProps) {
         </p>
       </div>
 
-      {showModal && <AddCarModal onClose={() => setShowModal(false)} />}
+      {showModal && <AddCarModal onClose={() => setShowModal(false)} sourceCode={addCarModalSource} />}
     </ComponentWrapper>
   )
 }

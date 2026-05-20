@@ -24,6 +24,9 @@ export default defineConfig({
     tsconfigPaths(),
   ],
   optimizeDeps: {
-    include: ['@ssr-workshop/shared'],
+    include: ['@ssr-workshop/shared', 'react-syntax-highlighter'],
+  },
+  ssr: {
+    noExternal: ['react-syntax-highlighter'],
   },
 })

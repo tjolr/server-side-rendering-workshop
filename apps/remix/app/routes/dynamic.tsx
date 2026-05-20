@@ -7,6 +7,7 @@ import type { Car } from '@ssr-workshop/shared'
 import { CarTableClient } from '~/components/CarTableClient'
 import { ServerFilteredTable } from '~/components/ServerFilteredTable'
 import { AddCarModal } from '~/components/AddCarModal'
+import routeSource from './dynamic.tsx?raw'
 
 // ─── Loader ──────────────────────────────────────────────────────────────────
 // defer() lets us return promises — Remix streams them via Suspense
@@ -97,7 +98,7 @@ export default function DynamicPage() {
         >
           <Await resolve={quickStatsPromise}>
             {(qs) => (
-              <ComponentWrapper type="server" label="🔵 SERVER — Quick Stats (0.5s delay)">
+              <ComponentWrapper type="server" label="🔵 SERVER — Quick Stats (0.5s delay)" sourceCode={routeSource} componentName="dynamic.tsx (Remix loader)">
                 <div className="flex gap-6 text-sm">
                   <span><strong className="text-blue-700">{qs.total}</strong> cars in database</span>
                   <span><strong className="text-green-700">{qs.electric}</strong> electric ({Math.round((qs.electric / qs.total) * 100)}%)</span>
@@ -129,7 +130,7 @@ export default function DynamicPage() {
         >
           <Await resolve={statsPromise}>
             {(stats) => (
-              <ComponentWrapper type="server" label="🔵 SERVER — Stats (2s delay)">
+              <ComponentWrapper type="server" label="🔵 SERVER — Stats (2s delay)" sourceCode={routeSource} componentName="dynamic.tsx (Remix loader)">
                 <h3 className="text-sm font-semibold text-gray-700 mb-3">Fleet Statistics</h3>
                 <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
                   {[
@@ -156,7 +157,7 @@ export default function DynamicPage() {
         <h2 className="text-base font-semibold text-gray-700 border-b pb-1">
           🟠 Client-side Filtering + Action Mutations
         </h2>
-        <ComponentWrapper type="server" label="🔵 SERVER — Data via Loader">
+        <ComponentWrapper type="server" label="🔵 SERVER — Data via Loader" sourceCode={routeSource} componentName="dynamic.tsx (Remix loader)">
           <p className="text-xs text-blue-600 font-mono mb-3">
             ↳ Cars loaded in Remix loader, passed as props. Remix re-runs this loader
             automatically after any action — no manual revalidation needed!

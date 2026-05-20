@@ -1,6 +1,8 @@
 import { getCars } from '@ssr-workshop/shared'
 import { ComponentWrapper } from '@ssr-workshop/shared'
 import { ServerFilterControls } from './ServerFilterControls'
+import { readFileSync } from 'fs'
+import path from 'path'
 
 interface ServerFilteredTableProps {
   searchParams: { make?: string; model?: string; category?: string; fuelType?: string; wheelDrive?: string }
@@ -21,8 +23,15 @@ export async function ServerFilteredTable({ searchParams }: ServerFilteredTableP
     return true
   })
 
+  const sourceCode = readFileSync(path.join(process.cwd(), 'app/dynamic/ServerFilteredTable.tsx'), 'utf-8')
+
   return (
-    <ComponentWrapper type="server" label="🔵 SERVER — URL-param Filtering">
+    <ComponentWrapper
+      type="server"
+      label="🔵 SERVER — URL-param Filtering"
+      sourceCode={sourceCode}
+      componentName="ServerFilteredTable.tsx"
+    >
       <div className="space-y-3">
         <p className="text-xs text-blue-600 font-mono">
           ↳ Each filter change updates the URL → triggers server re-render → server filters the data.

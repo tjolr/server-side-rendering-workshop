@@ -1,5 +1,7 @@
 import { getCars } from '@ssr-workshop/shared'
 import { ComponentWrapper } from '@ssr-workshop/shared'
+import { readFileSync } from 'fs'
+import path from 'path'
 
 // Server Component with 0.5s delay — loads before StatsWidget, shows progressive streaming
 export async function CarCountWidget() {
@@ -9,9 +11,15 @@ export async function CarCountWidget() {
   const cars = getCars()
   const electricCount = cars.filter((c) => c.fuelType === 'Electric').length
   const awdCount = cars.filter((c) => c.wheelDrive === 'AWD').length
+  const sourceCode = readFileSync(path.join(process.cwd(), 'app/dynamic/CarCountWidget.tsx'), 'utf-8')
 
   return (
-    <ComponentWrapper type="server" label="🔵 SERVER — Quick Stats (0.5s delay)">
+    <ComponentWrapper
+      type="server"
+      label="🔵 SERVER — Quick Stats (0.5s delay)"
+      sourceCode={sourceCode}
+      componentName="CarCountWidget.tsx"
+    >
       <div className="flex gap-6 text-sm">
         <span>
           <strong className="text-blue-700">{cars.length}</strong> cars in database

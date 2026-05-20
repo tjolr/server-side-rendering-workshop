@@ -1,5 +1,7 @@
 import { getCarStats } from '@ssr-workshop/shared'
 import { ComponentWrapper } from '@ssr-workshop/shared'
+import { readFileSync } from 'fs'
+import path from 'path'
 
 // Server Component with artificial 2s delay — used to demo Suspense streaming
 export async function StatsWidget() {
@@ -7,9 +9,15 @@ export async function StatsWidget() {
   await new Promise((r) => setTimeout(r, 2000))
 
   const stats = getCarStats()
+  const sourceCode = readFileSync(path.join(process.cwd(), 'app/dynamic/StatsWidget.tsx'), 'utf-8')
 
   return (
-    <ComponentWrapper type="server" label="🔵 SERVER — Stats (2s delay)">
+    <ComponentWrapper
+      type="server"
+      label="🔵 SERVER — Stats (2s delay)"
+      sourceCode={sourceCode}
+      componentName="StatsWidget.tsx"
+    >
       <h3 className="text-sm font-semibold text-gray-700 mb-3">Fleet Statistics</h3>
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
         {[

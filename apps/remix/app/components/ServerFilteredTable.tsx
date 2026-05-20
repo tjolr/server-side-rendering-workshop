@@ -2,6 +2,7 @@ import { useNavigate, useLocation } from '@remix-run/react'
 import { useTransition, useCallback } from 'react'
 import { ComponentWrapper } from '@ssr-workshop/shared'
 import type { Car } from '@ssr-workshop/shared'
+import sourceCode from './ServerFilteredTable.tsx?raw'
 
 interface ServerFilteredTableProps {
   cars: Car[]
@@ -31,7 +32,12 @@ export function ServerFilteredTable({ cars, searchParams }: ServerFilteredTableP
   )
 
   return (
-    <ComponentWrapper type="server" label="🔵 SERVER — URL-param Filtering">
+    <ComponentWrapper
+      type="server"
+      label="🔵 SERVER — URL-param Filtering"
+      sourceCode={sourceCode}
+      componentName="ServerFilteredTable.tsx (Remix)"
+    >
       <div className="space-y-3">
         <p className="text-xs text-blue-600 font-mono">
           ↳ Each filter change updates the URL → Remix re-runs the loader → server filters the data.

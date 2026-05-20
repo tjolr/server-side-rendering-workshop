@@ -1,14 +1,20 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useFetcher } from '@remix-run/react'
-import { Input, Select } from '@ssr-workshop/shared'
+import { Input, Select, CodeModal } from '@ssr-workshop/shared'
+import sourceCode from './AddCarModal.tsx?raw'
 
 interface AddCarModalProps {
   onClose: () => void
+  sourceCode?: string
 }
 
-export function AddCarModal({ onClose }: AddCarModalProps) {
+export function AddCarModal({ onClose, sourceCode: sourceProp }: AddCarModalProps) {
   const fetcher = useFetcher()
   const isPending = fetcher.state !== 'idle'
+  const [showCode, setShowCode] = useState(false)
+
+  // Use prop if passed (from parent), otherwise use ?raw self-import
+  const codeToShow = sourceProp ?? sourceCode
 
   useEffect(() => {
     if (fetcher.state === 'idle' && fetcher.data) {
@@ -21,9 +27,14 @@ export function AddCarModal({ onClose }: AddCarModalProps) {
       <div className="w-full max-w-lg rounded-xl border-2 border-orange-500 bg-white p-6 shadow-xl">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-gray-900">Add New Car</h2>
-          <span className="rounded-full bg-orange-100 px-2 py-0.5 text-xs font-mono text-orange-700 border border-orange-300">
+          <button
+            type="button"
+            onClick={() => setShowCode(true)}
+            className="rounded-full bg-orange-100 px-2 py-0.5 text-xs font-mono text-orange-700 border border-orange-300 cursor-pointer hover:brightness-95 transition-[filter]"
+            title="View source code"
+          >
             🟠 CLIENT → Remix Action
-          </span>
+          </button>
         </div>
 
         <fetcher.Form method="post" action="/dynamic" className="space-y-4">
@@ -97,6 +108,14 @@ export function AddCarModal({ onClose }: AddCarModalProps) {
           </div>
         </fetcher.Form>
       </div>
+
+      {showCode && (
+        <CodeModal
+          title="AddCarModal.tsx (Remix)"
+          code={codeToShow}
+          onClose={() => setShowCode(false)}
+        />
+      )}
     </div>
   )
 }

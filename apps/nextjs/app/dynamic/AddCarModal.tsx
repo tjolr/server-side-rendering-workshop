@@ -1,17 +1,19 @@
 'use client'
 
-import { useActionState, useEffect } from 'react'
-import { Button, Input, Select } from '@ssr-workshop/shared'
+import { useActionState, useEffect, useState } from 'react'
+import { Button, Input, Select, CodeModal } from '@ssr-workshop/shared'
 import { addCarAction } from '../actions'
 
 interface AddCarModalProps {
   onClose: () => void
+  sourceCode?: string
 }
 
 const initialState = { success: false, error: undefined as string | undefined }
 
-export function AddCarModal({ onClose }: AddCarModalProps) {
+export function AddCarModal({ onClose, sourceCode }: AddCarModalProps) {
   const [state, formAction, isPending] = useActionState(addCarAction, initialState)
+  const [showCode, setShowCode] = useState(false)
 
   useEffect(() => {
     if (state.success) onClose()
@@ -22,9 +24,20 @@ export function AddCarModal({ onClose }: AddCarModalProps) {
       <div className="w-full max-w-lg rounded-xl border-2 border-orange-500 bg-white p-6 shadow-xl">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-gray-900">Add New Car</h2>
-          <span className="rounded-full bg-orange-100 px-2 py-0.5 text-xs font-mono text-orange-700 border border-orange-300">
-            🟠 CLIENT → Server Action
-          </span>
+          {sourceCode ? (
+            <button
+              type="button"
+              onClick={() => setShowCode(true)}
+              className="rounded-full bg-orange-100 px-2 py-0.5 text-xs font-mono text-orange-700 border border-orange-300 cursor-pointer hover:brightness-95 transition-[filter]"
+              title="View source code"
+            >
+              🟠 CLIENT → Server Action
+            </button>
+          ) : (
+            <span className="rounded-full bg-orange-100 px-2 py-0.5 text-xs font-mono text-orange-700 border border-orange-300">
+              🟠 CLIENT → Server Action
+            </span>
+          )}
         </div>
 
         <form action={formAction} className="space-y-4">
@@ -95,6 +108,14 @@ export function AddCarModal({ onClose }: AddCarModalProps) {
           </div>
         </form>
       </div>
+
+      {showCode && sourceCode && (
+        <CodeModal
+          title="AddCarModal.tsx"
+          code={sourceCode}
+          onClose={() => setShowCode(false)}
+        />
+      )}
     </div>
   )
 }
