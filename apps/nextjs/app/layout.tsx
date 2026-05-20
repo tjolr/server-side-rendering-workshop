@@ -60,6 +60,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <div className="flex gap-4 ml-2">
               <Link href="/dynamic" className="nav-link-dark">/dynamic</Link>
               <Link href="/static" className="nav-link-dark">/static</Link>
+              <Link href="/nesting" className="nav-link-dark">/nesting</Link>
             </div>
           </nav>
         </header>
