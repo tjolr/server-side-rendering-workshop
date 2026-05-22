@@ -2,14 +2,11 @@
   "name": "ssr-workshop",
   "private": true,
   "scripts": {
-    "dev": "concurrently --names \"nextjs,remix\" --prefix-colors \"blue,magenta\" \"pnpm --filter nextjs dev\" \"pnpm --filter remix dev\"",
-    "build": "turbo build",
-    "dev:nextjs": "pnpm --filter nextjs dev",
-    "dev:remix": "pnpm --filter remix dev"
+    "dev": "pnpm --filter nextjs dev",
+    "build": "turbo build"
   },
   "devDependencies": {
-    "concurrently": "^9.1.2",
-    "turbo": "^2.9.14",
+"turbo": "^2.9.14",
     "typescript": "^5.8.3"
   },
   "engines": {
